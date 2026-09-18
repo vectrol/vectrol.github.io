@@ -5,6 +5,8 @@ import Footer from '../components/Footer.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Comments from '../components/Comments.astro';
 import VisitCounter from '../components/VisitCounter.astro';
+import TOC from '../components/TOC.astro';
+import RelatedPosts from '../components/RelatedPosts.astro';
 
 interface Props {
   title: string;
@@ -25,12 +27,16 @@ function estimateReadingTime(): number {
 }
 
 const readingTime = estimateReadingTime();
+
+// 获取当前文章 slug
+const currentSlug = Astro.url.pathname.split('/posts/')[1]?.replace(/\/$/, '') || '';
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} image={heroImage} type="article">
   <Header />
+  <TOC />
   <main class="min-h-screen">
-    <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 xl:pr-72">
       <!-- 返回按钮 -->
       <a href="/" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-8 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,33 +108,46 @@ const readingTime = estimateReadingTime();
       <!-- 文章底部 -->
       <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
         <!-- 分享按钮 -->
-        <div class="flex items-center gap-4 mb-8">
+        <div class="flex flex-wrap items-center gap-4 mb-8">
           <span class="text-sm text-gray-500 dark:text-gray-400">分享这篇文章:</span>
-          <a
-            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
-            target="_blank"
-            rel="noopener"
-            class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            aria-label="分享到 Twitter"
-          >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-            </svg>
-          </a>
-          <a
-            href={`https://service.weibo.com/share/share.php?title=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
-            target="_blank"
-            rel="noopener"
-            class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            aria-label="分享到微博"
-          >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.86 1.799-.577.636.276.82.986.436 1.568zm1.6-2.148c-.152.237-.484.352-.739.253-.251-.095-.331-.355-.177-.596.148-.235.481-.352.733-.256.254.091.34.354.183.599zm.515-3.667c-1.691-.466-3.594.256-4.363 1.629-.782 1.397-.096 2.958 1.611 3.479 1.765.541 3.814-.202 4.567-1.646.74-1.413-.096-2.974-1.815-3.462z"/>
-            </svg>
-          </a>
+          <div class="flex items-center gap-2">
+            <a
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
+              target="_blank"
+              rel="noopener"
+              class="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="分享到 Twitter"
+            >
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a
+              href={`https://service.weibo.com/share/share.php?title=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
+              target="_blank"
+              rel="noopener"
+              class="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="分享到微博"
+            >
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.86 1.799-.577.636.276.82.986.436 1.568zm1.6-2.148c-.152.237-.484.352-.739.253-.251-.095-.331-.355-.177-.596.148-.235.481-.352.733-.256.254.091.34.354.183.599zm.515-3.667c-1.691-.466-3.594.256-4.363 1.629-.782 1.397-.096 2.958 1.611 3.479 1.765.541 3.814-.202 4.567-1.646.74-1.413-.096-2.974-1.815-3.462z"/>
+              </svg>
+            </a>
+            <button
+              id="copy-link-btn"
+              class="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="复制链接"
+              data-url={Astro.url.href}
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <VisitCounter />
+        <RelatedPosts currentSlug={currentSlug} tags={tags} category={category} />
         <Comments />
       </footer>
     </article>
@@ -136,3 +155,17 @@ const readingTime = estimateReadingTime();
   <Footer />
   <ThemeToggle />
 </BaseLayout>
+
+<script>
+  // 复制链接功能
+  document.getElementById('copy-link-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const url = btn.dataset.url;
+    if (url) {
+      await navigator.clipboard.writeText(url);
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
+      setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+    }
+  });
+</script>

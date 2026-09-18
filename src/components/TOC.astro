@@ -1,0 +1,97 @@
+---
+---
+
+<nav id="toc" class="hidden xl:block fixed right-8 top-32 w-64 max-h-[calc(100vh-10rem)] overflow-y-auto">
+  <div class="sticky top-0">
+    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+      </svg>
+      目录
+    </h4>
+    <ul id="toc-list" class="space-y-2 text-sm border-l border-gray-200 dark:border-gray-700">
+    </ul>
+  </div>
+</nav>
+
+<script>
+  function initTOC() {
+    const article = document.querySelector('.prose');
+    const tocList = document.getElementById('toc-list');
+    if (!article || !tocList) return;
+
+  // Get all headings from the rendered content
+  const headings = article.querySelectorAll('h1, h2, h3, h4');
+  
+  if (headings.length === 0) {
+    document.getElementById('toc')?.classList.add('hidden');
+    return;
+  }
+
+  // Show TOC
+  document.getElementById('toc')?.classList.remove('hidden');
+
+  // Generate TOC items
+  headings.forEach((heading, index) => {
+    const id = `heading-${index}`;
+    heading.id = id;
+
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    
+    a.href = `#${id}`;
+    a.textContent = heading.textContent;
+    a.className = 'block py-1 px-3 text-gray-500 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-r-lg transition-colors border-l-2 border-transparent -ml-[2px]';
+    
+    // Indent based on heading level
+    const level = parseInt(heading.tagName.charAt(1));
+    if (level === 3) a.style.paddingLeft = '1.5rem';
+    if (level === 4) a.style.paddingLeft = '2.25rem';
+    
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+
+  // Highlight active heading on scroll
+  const tocLinks = tocList.querySelectorAll('a');
+  
+  function highlightActiveHeading() {
+    let current = '';
+    
+    headings.forEach((heading) => {
+      const rect = heading.getBoundingClientRect();
+      if (rect.top <= 120) {
+        current = heading.id;
+      }
+    });
+
+    tocLinks.forEach((link) => {
+      link.classList.remove('text-brand-600', 'dark:text-brand-400', 'border-brand-500', 'bg-brand-50', 'dark:bg-brand-950/50');
+      link.classList.add('border-transparent');
+      
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('text-brand-600', 'dark:text-brand-400', 'border-brand-500', 'bg-brand-50', 'dark:bg-brand-950/50');
+        link.classList.remove('border-transparent');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', highlightActiveHeading, { passive: true });
+  highlightActiveHeading();
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', initTOC);
+// Also run immediately in case DOMContentLoaded already fired
+initTOC();
+</script>
+
+<style>
+  #toc-list::-webkit-scrollbar {
+    width: 2px;
+  }
+  
+  #toc-list::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+  }
+</style>

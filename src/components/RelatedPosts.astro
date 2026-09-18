@@ -1,0 +1,60 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+  currentSlug: string;
+  tags: string[];
+  category?: string;
+}
+
+const { currentSlug, tags, category } = Astro.props;
+
+const allPosts = await getCollection('posts');
+
+// 按相关性排序：同分类 + 共同标签数量
+const relatedPosts = allPosts
+  .filter(post => post.id !== currentSlug)
+  .map(post => {
+    let score = 0;
+    if (post.data.category === category && category) score += 3;
+    if (post.data.tags) {
+      score += post.data.tags.filter(t => tags.includes(t)).length;
+    }
+    return { ...post, score };
+  })
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3);
+---
+
+{relatedPosts.length > 0 && (
+  <section class="mt-16 pt-8 border-t border-gray-200 dark:border-gray-800">
+    <h3 class="text-xl font-serif font-bold mb-6 flex items-center gap-2">
+      <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      相关推荐
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {relatedPosts.map((post) => (
+        <a href={`/posts/${post.id}`} class="group block p-4 bg-gray-50 dark:bg-gray-900 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          {post.data.heroImage && (
+            <div class="aspect-video overflow-hidden rounded-lg mb-3">
+              <img
+                src={post.data.heroImage}
+                alt={post.data.title}
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            </div>
+          )}
+          <h4 class="font-medium group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
+            {post.data.title}
+          </h4>
+          <time class="text-xs text-gray-500 dark:text-gray-400 mt-2 block">
+            {post.data.pubDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </time>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
