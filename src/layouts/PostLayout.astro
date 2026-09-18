@@ -17,30 +17,59 @@ interface Props {
 }
 
 const { title, description, pubDate, updatedDate, heroImage, tags = [], category } = Astro.props;
+
+function estimateReadingTime(): number {
+  const text = description || title;
+  const words = text.length;
+  return Math.max(1, Math.ceil(words / 300));
+}
+
+const readingTime = estimateReadingTime();
 ---
 
 <BaseLayout title={title} description={description}>
   <Header />
   <main class="min-h-screen">
     <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- 返回按钮 -->
+      <a href="/" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-8 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回首页
+      </a>
+
       {heroImage && (
         <div class="mb-8 rounded-2xl overflow-hidden shadow-2xl">
           <img src={heroImage} alt={title} class="w-full h-64 sm:h-96 object-cover" />
         </div>
       )}
 
-      <header class="mb-8">
-        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3">
+      <header class="mb-10">
+        <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
           <time datetime={pubDate.toISOString()}>
             {pubDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
           </time>
+          <span class="text-gray-300 dark:text-gray-600">·</span>
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {readingTime} 分钟阅读
+          </span>
           {updatedDate && (
-            <span>· 更新于 {updatedDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <>
+              <span class="text-gray-300 dark:text-gray-600">·</span>
+              <span>更新于 {updatedDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </>
           )}
           {category && (
-            <a href={`/categories/${category}`} class="px-2 py-0.5 bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300 rounded-full text-xs font-medium hover:bg-brand-200 dark:hover:bg-brand-800 transition-colors">
-              {category}
-            </a>
+            <>
+              <span class="text-gray-300 dark:text-gray-600">·</span>
+              <a href={`/categories?category=${category}`} class="px-2.5 py-0.5 bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 rounded-full text-xs font-medium hover:bg-brand-100 dark:hover:bg-brand-900 transition-colors">
+                {category}
+              </a>
+            </>
           )}
         </div>
 
@@ -55,9 +84,9 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], category
         )}
 
         {tags.length > 0 && (
-          <div class="flex flex-wrap gap-2 mt-4">
+          <div class="flex flex-wrap gap-2 mt-6">
             {tags.map((tag) => (
-              <a href={`/categories?tag=${tag}`} class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <a href={`/categories?tag=${tag}`} class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 #{tag}
               </a>
             ))}
@@ -65,11 +94,40 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], category
         )}
       </header>
 
+      <!-- 文章内容 -->
       <div class="prose prose-lg dark:prose-invert max-w-none">
         <slot />
       </div>
 
+      <!-- 文章底部 -->
       <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+        <!-- 分享按钮 -->
+        <div class="flex items-center gap-4 mb-8">
+          <span class="text-sm text-gray-500 dark:text-gray-400">分享这篇文章:</span>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
+            target="_blank"
+            rel="noopener"
+            class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="分享到 Twitter"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a
+            href={`https://service.weibo.com/share/share.php?title=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
+            target="_blank"
+            rel="noopener"
+            class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="分享到微博"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.86 1.799-.577.636.276.82.986.436 1.568zm1.6-2.148c-.152.237-.484.352-.739.253-.251-.095-.331-.355-.177-.596.148-.235.481-.352.733-.256.254.091.34.354.183.599zm.515-3.667c-1.691-.466-3.594.256-4.363 1.629-.782 1.397-.096 2.958 1.611 3.479 1.765.541 3.814-.202 4.567-1.646.74-1.413-.096-2.974-1.815-3.462z"/>
+            </svg>
+          </a>
+        </div>
+
         <VisitCounter />
         <Comments />
       </footer>

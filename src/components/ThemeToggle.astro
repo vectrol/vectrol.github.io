@@ -1,10 +1,21 @@
 ---
-
 ---
 
+<!-- 返回顶部 -->
+<button
+  id="back-to-top"
+  class="fixed bottom-6 right-6 z-50 p-3 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-4 pointer-events-none hover:scale-110 transition-all duration-300"
+  aria-label="返回顶部"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+  </svg>
+</button>
+
+<!-- 主题切换 -->
 <button
   id="theme-toggle"
-  class="fixed bottom-6 right-6 z-50 p-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full shadow-lg hover:scale-110 transition-all duration-300"
+  class="fixed bottom-20 right-6 z-50 p-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full shadow-lg hover:scale-110 transition-all duration-300"
   aria-label="切换主题"
 >
   <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -16,6 +27,7 @@
 </button>
 
 <script>
+  // 主题切换
   function getTheme(): string {
     if (typeof localStorage !== 'undefined') {
       const theme = localStorage.getItem('theme');
@@ -47,5 +59,25 @@
   document.getElementById('theme-toggle')?.addEventListener('click', () => {
     const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
     setTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  // 返回顶部
+  const backToTopBtn = document.getElementById('back-to-top');
+  
+  function toggleBackToTop() {
+    if (window.scrollY > 500) {
+      backToTopBtn?.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      backToTopBtn?.classList.add('opacity-100', 'translate-y-0');
+    } else {
+      backToTopBtn?.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+      backToTopBtn?.classList.remove('opacity-100', 'translate-y-0');
+    }
+  }
+
+  window.addEventListener('scroll', toggleBackToTop, { passive: true });
+  toggleBackToTop();
+
+  backToTopBtn?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 </script>
