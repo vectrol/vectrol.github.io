@@ -1,0 +1,57 @@
+---
+---
+
+<div id="comments" class="mt-8">
+  <h3 class="text-xl font-serif font-bold mb-4">评论</h3>
+  <div id="giscus-container"></div>
+</div>
+
+<script>
+  function loadGiscus() {
+    const container = document.getElementById('giscus-container');
+    if (!container) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'vectrol/vectrol.github.io');
+    script.setAttribute('data-repo-id', '');
+    script.setAttribute('data-category', 'Announcements');
+    script.setAttribute('data-category-id', '');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'top');
+    script.setAttribute('data-theme', isDark ? 'dark_dimmed' : 'light');
+    script.setAttribute('data-lang', 'zh-CN');
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+
+    container.appendChild(script);
+  }
+
+  loadGiscus();
+
+  // 监听主题切换
+  const observer = new MutationObserver(() => {
+    const iframe = document.querySelector('iframe.giscus-frame') as HTMLIFrameElement;
+    if (iframe) {
+      const isDark = document.documentElement.classList.contains('dark');
+      iframe.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: isDark ? 'dark_dimmed' : 'light' } } },
+        'https://giscus.app'
+      );
+    }
+  });
+
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+</script>
+
+<style>
+  #giscus-container :global(iframe) {
+    width: 100%;
+    min-height: 200px;
+  }
+</style>

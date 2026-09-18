@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+---
+
+<BaseLayout title="关于 - MyBlog">
+  <Header />
+
+  <main class="min-h-screen">
+    <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="text-center mb-12">
+        <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gradient-to-br from-brand-400 to-brand-600 p-1">
+          <div class="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center">
+            <span class="text-4xl">👨‍💻</span>
+          </div>
+        </div>
+        <h1 class="text-3xl font-serif font-bold mb-2">你好，我是博主</h1>
+        <p class="text-gray-600 dark:text-gray-400">一个热爱生活和技术的人</p>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2>关于我</h2>
+        <p>
+          我是一名全栈开发者，对技术和生活都充满好奇。这个博客是我的个人空间，用来记录生活中的点滴、分享技术学习心得，以及一些天马行空的想法。
+        </p>
+        <p>
+          目前在维护 <a href="https://github.com/vectrol/xin-zhi-lu-tu">心之旅途</a> 项目 — 一个关于心理学自学的记录。
+        </p>
+
+        <h2>为什么写博客？</h2>
+        <ul>
+          <li><strong>记录</strong> — 很多想法转瞬即逝，写下来才能沉淀</li>
+          <li><strong>分享</strong> — 技术的路上踩过不少坑，希望对他人有帮助</li>
+          <li><strong>交流</strong> — 期待与更多有趣的人相遇</li>
+        </ul>
+
+        <h2>技术栈</h2>
+        <p>这个博客使用以下技术搭建：</p>
+        <ul>
+          <li><strong>Astro</strong> — 静态站点生成器，极速加载</li>
+          <li><strong>Tailwind CSS</strong> — 优雅的原子化 CSS</li>
+          <li><strong>GitHub Pages</strong> — 免费稳定的部署</li>
+        </ul>
+
+        <h2>联系方式</h2>
+        <p>如果你有任何想法或建议，欢迎通过以下方式联系我：</p>
+        <ul>
+          <li>GitHub: <a href="https://github.com/vectrol">vectrol</a></li>
+          <li>Email: <a href="mailto:your@email.com">your@email.com</a></li>
+        </ul>
+      </div>
+    </article>
+  </main>
+
+  <Footer />
+  <ThemeToggle />
+</BaseLayout>
