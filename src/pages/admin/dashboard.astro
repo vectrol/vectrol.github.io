@@ -1,0 +1,340 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="管理面板 - MyBlog">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <!-- 顶部导航 -->
+    <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <a href="/" class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold text-sm">
+              M
+            </div>
+            <span class="font-serif font-bold hidden sm:block">MyBlog</span>
+          </a>
+          <span class="text-gray-300 dark:text-gray-600">|</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400">管理面板</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <a
+            href="/admin/new"
+            class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            新建文章
+          </a>
+          <button
+            id="logout-btn"
+            class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm transition-colors"
+          >
+            退出
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+          <div class="text-sm text-gray-500 dark:text-gray-400">总文章</div>
+          <div id="stat-total" class="text-2xl font-bold mt-1">-</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+          <div class="text-sm text-gray-500 dark:text-gray-400">已发布</div>
+          <div id="stat-published" class="text-2xl font-bold mt-1 text-green-600 dark:text-green-400">-</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+          <div class="text-sm text-gray-500 dark:text-gray-400">草稿</div>
+          <div id="stat-draft" class="text-2xl font-bold mt-1 text-yellow-600 dark:text-yellow-400">-</div>
+        </div>
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+          <div class="text-sm text-gray-500 dark:text-gray-400">分类数</div>
+          <div id="stat-categories" class="text-2xl font-bold mt-1">-</div>
+        </div>
+      </div>
+
+      <!-- 文章列表 -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <h2 class="font-serif font-bold">文章列表</h2>
+          <div class="flex items-center gap-2">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="搜索文章..."
+              class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none w-48"
+            />
+            <select
+              id="filter-status"
+              class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+            >
+              <option value="all">全部</option>
+              <option value="published">已发布</option>
+              <option value="draft">草稿</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="article-list" class="divide-y divide-gray-200 dark:divide-gray-800">
+          <div class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+            <svg class="w-8 h-8 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <p>正在加载文章列表...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 路由守卫
+    if (!localStorage.getItem('admin_token')) {
+      window.location.href = '/admin';
+    }
+
+    const GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+    const OWNER = 'vectrol';
+    const REPO = 'vectrol.github.io';
+    const POSTS_PATH = 'src/content/posts';
+
+    interface Article {
+      name: string;
+      path: string;
+      sha: string;
+      title: string;
+      draft: boolean;
+      category: string;
+      pubDate: string;
+    }
+
+    let allArticles: Article[] = [];
+
+    // 解析 frontmatter
+    function parseFrontmatter(content: string) {
+      const match = content.match(/^---\n([\s\S]*?)\n---/);
+      if (!match) return {};
+      
+      const meta: Record<string, any> = {};
+      const lines = match[1].split('\n');
+      
+      for (const line of lines) {
+        const [key, ...valueParts] = line.split(':');
+        if (key && valueParts.length) {
+          const value = valueParts.join(':').trim();
+          meta[key.trim()] = value.replace(/^["']|["']$/g, '');
+        }
+      }
+      return meta;
+    }
+
+    // 加载文章列表
+    async function loadArticles() {
+      try {
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${POSTS_PATH}`;
+        const headers: Record<string, string> = {
+          Accept: 'application/vnd.github.v3+json',
+        };
+        if (GITHUB_TOKEN) {
+          headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+        }
+
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error('Failed to fetch');
+        
+        const files = await res.json();
+        
+        // 获取每个文件的内容
+        const articles: Article[] = [];
+        
+        for (const file of files.filter((f: any) => f.name.endsWith('.md'))) {
+          try {
+            const fileRes = await fetch(file.url, { headers });
+            if (!fileRes.ok) continue;
+            
+            const fileData = await fileRes.json();
+            const content = decodeURIComponent(atob(fileData.content));
+            const meta = parseFrontmatter(content);
+            
+            articles.push({
+              name: file.name,
+              path: file.path,
+              sha: file.sha,
+              title: meta.title || file.name.replace('.md', ''),
+              draft: meta.draft === 'true',
+              category: meta.category || '',
+              pubDate: meta.pubDate || '',
+            });
+          } catch (e) {
+            console.error(`Error loading ${file.name}:`, e);
+          }
+        }
+
+        allArticles = articles.sort((a, b) => 
+          new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+        );
+        
+        updateStats();
+        renderArticles(allArticles);
+      } catch (error) {
+        console.error('Error loading articles:', error);
+        document.getElementById('article-list')!.innerHTML = `
+          <div class="px-6 py-12 text-center text-gray-500">
+            <p class="mb-4">加载失败，请检查网络或 Token 配置</p>
+            <button onclick="loadArticles()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700">
+              重试
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // 更新统计
+    function updateStats() {
+      const total = allArticles.length;
+      const published = allArticles.filter(a => !a.draft).length;
+      const draft = allArticles.filter(a => a.draft).length;
+      const categories = new Set(allArticles.map(a => a.category).filter(Boolean)).size;
+
+      document.getElementById('stat-total')!.textContent = String(total);
+      document.getElementById('stat-published')!.textContent = String(published);
+      document.getElementById('stat-draft')!.textContent = String(draft);
+      document.getElementById('stat-categories')!.textContent = String(categories);
+    }
+
+    // 渲染文章列表
+    function renderArticles(articles: Article[]) {
+      const container = document.getElementById('article-list')!;
+      
+      if (articles.length === 0) {
+        container.innerHTML = `
+          <div class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+            <p>暂无文章</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = articles.map(article => `
+        <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-medium truncate">${article.title}</h3>
+              ${article.draft ? '<span class="px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full">草稿</span>' : '<span class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">已发布</span>'}
+            </div>
+            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <span>${article.pubDate || '未设置日期'}</span>
+              ${article.category ? `<span>· ${article.category}</span>` : ''}
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 ml-4">
+            <a
+              href="/posts/${article.name.replace('.md', '')}"
+              target="_blank"
+              class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="预览"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+            <a
+              href="/admin/edit?file=${encodeURIComponent(article.name)}"
+              class="p-2 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="编辑"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </a>
+            <button
+              onclick="deleteArticle('${article.name}', '${article.sha}')"
+              class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="删除"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 删除文章
+    (window as any).deleteArticle = async function(name: string, sha: string) {
+      if (!confirm(`确定要删除 "${name}" 吗？此操作不可撤销。`)) return;
+      
+      try {
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${POSTS_PATH}/${name}`;
+        const headers: Record<string, string> = {
+          Accept: 'application/vnd.github.v3+json',
+        };
+        if (GITHUB_TOKEN) {
+          headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+        }
+
+        const res = await fetch(url, {
+          method: 'DELETE',
+          headers,
+          body: JSON.stringify({
+            message: `[Admin] 删除文章 ${name}`,
+            sha: sha,
+          }),
+        });
+
+        if (res.ok) {
+          loadArticles();
+        } else {
+          alert('删除失败，请检查权限');
+        }
+      } catch (error) {
+        alert('删除失败：' + error);
+      }
+    };
+
+    // 搜索和筛选
+    document.getElementById('search-input')?.addEventListener('input', filterArticles);
+    document.getElementById('filter-status')?.addEventListener('change', filterArticles);
+
+    function filterArticles() {
+      const search = (document.getElementById('search-input') as HTMLInputElement)?.value.toLowerCase() || '';
+      const status = (document.getElementById('filter-status') as HTMLSelectElement)?.value || 'all';
+      
+      let filtered = allArticles;
+      
+      if (search) {
+        filtered = filtered.filter(a => 
+          a.title.toLowerCase().includes(search) || 
+          a.category.toLowerCase().includes(search)
+        );
+      }
+      
+      if (status === 'published') {
+        filtered = filtered.filter(a => !a.draft);
+      } else if (status === 'draft') {
+        filtered = filtered.filter(a => a.draft);
+      }
+      
+      renderArticles(filtered);
+    }
+
+    // 退出登录
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('github_token');
+      window.location.href = '/admin';
+    });
+
+    // 初始化
+    loadArticles();
+  </script>
+</BaseLayout>

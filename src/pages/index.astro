@@ -7,9 +7,9 @@ import ThemeToggle from '../components/ThemeToggle.astro';
 import SearchModal from '../components/SearchModal.astro';
 import { getCollection } from 'astro:content';
 
-const posts = (await getCollection('posts')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
 const featuredPosts = posts.filter((post) => post.data.featured);
 const recentPosts = posts.slice(0, 6);

@@ -6,9 +6,9 @@ import PostCard from '../../components/PostCard.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
 import { getCollection } from 'astro:content';
 
-const posts = (await getCollection('posts')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const posts = (await getCollection('posts'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
 // 提取所有分类和标签
 const categories = [...new Set(posts.map((post) => post.data.category).filter(Boolean))];
